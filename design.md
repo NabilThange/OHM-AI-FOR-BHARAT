@@ -239,10 +239,10 @@ else {
 **Location:** `lib/agents/orchestrator.ts`
 
 **Responsibilities:**
-- Execute individual agents with BYTEZ API
-- Handle streaming and non-streaming responses
+- Execute individual agents with Amazon Bedrock
+- Handle streaming and non-streaming responses via ConverseStream API
 - Process tool calls from agents
-- Automatic failover on API errors
+- Automatic failover on throttling errors with exponential backoff
 - Vision agent support for image analysis
 
 **Key Methods:**
@@ -343,45 +343,42 @@ for (const toolCall of toolCalls) {
 }
 ```
 
-### 3. BytezClient (Singleton)
+### 3. BedrockClient (Singleton)
 
-**Location:** `lib/agents/orchestrator.ts`
+**Location:** `lib/aws/bedrock-client.ts`
 
 **Responsibilities:**
-- Maintain singleton OpenAI client instance with BYTEZ endpoint
-- Connect to BYTEZ API service
-- Handle API key rotation and failover
+- Maintain singleton Amazon Bedrock Runtime client instance
+- Connect to Amazon Bedrock service
+- Handle throttling errors with exponential backoff
 - Thread-safe instance management
 
 **Implementation:**
 
 ```typescript
-import OpenAI from "openai";
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 
-class BytezClient {
-    private static instance: OpenAI | null = null
-    private static currentKey: string | null = null
+class BedrockClient {
+    private static instance: BedrockRuntimeClient | null = null
     private static isRefreshing: boolean = false
     
-    static async getInstance(forceRefresh: boolean = false): Promise<OpenAI> {
+    static async getInstance(forceRefresh: boolean = false): Promise<BedrockRuntimeClient> {
         // Wait if another request is refreshing
         while (this.isRefreshing) {
             await new Promise(resolve => setTimeout(resolve, 100))
         }
-        
-        const keyManager = KeyManager.getInstance();
-        const activeKey = keyManager.getCurrentKey();
 
-        if (!this.instance || this.currentKey !== activeKey || forceRefresh) {
+        if (!this.instance || forceRefresh) {
             this.isRefreshing = true
             try {
-                this.currentKey = activeKey;
-                this.instance = new OpenAI({
-                    apiKey: activeKey,
-                    baseURL: "https://api.bytez.com/models/v2/openai/v1",
-                    dangerouslyAllowBrowser: true
+                this.instance = new BedrockRuntimeClient({
+                    region: process.env.AWS_REGION || "us-east-1",
+                    credentials: {
+                        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+                        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+                    },
                 });
-                console.log(`🔌 BytezClient connected: ${keyManager.getStatus().split('\n')[0]}`);
+                console.log(`🔌 BedrockClient connected to region: ${process.env.AWS_REGION || "us-east-1"}`);
             } finally {
                 this.isRefreshing = false
             }
@@ -392,51 +389,53 @@ class BytezClient {
 }
 ```
 
-### 4. KeyManager
+### 4. Throttling Manager
 
-**Location:** `lib/agents/key-manager.ts`
+**Location:** `lib/aws/throttling-manager.ts`
 
 **Responsibilities:**
-- Load and manage multiple BYTEZ API keys
-- Automatic rotation on quota exhaustion
+- Handle Amazon Bedrock throttling errors
+- Implement exponential backoff retry logic
 - Health tracking and metrics
-- Toast notifications for key events
+- Toast notifications for throttling events
 
 **Configuration:**
 
 ```typescript
-// Environment variables support
-// New numbered format: BYTEZ_API_KEY_1, BYTEZ_API_KEY_2, etc.
-// Legacy format: BYTEZ_API_KEYS (comma-separated)
-// Fallback: BYTEZ_API_KEY (single key)
+// AWS Configuration from environment variables
+// AWS_REGION: AWS region for Bedrock service (default: us-east-1)
+// AWS_ACCESS_KEY_ID: AWS access key
+// AWS_SECRET_ACCESS_KEY: AWS secret key
 
-// Supports up to 20 keys for maximum redundancy
-for (let i = 1; i <= 20; i++) {
-    const key = process.env[`BYTEZ_API_KEY_${i}`];
-    if (key && key.trim().length > 0) {
-        keys.push(key.trim());
-    } else {
-        break; // Stop at first gap
-    }
-}
+// Exponential backoff configuration
+const RETRY_CONFIG = {
+    maxRetries: 4,
+    baseDelay: 1000, // 1 second
+    maxDelay: 16000, // 16 seconds
+};
+
+// Calculate delay: min(baseDelay * 2^attempt, maxDelay)
+const delay = Math.min(RETRY_CONFIG.baseDelay * Math.pow(2, attempt), RETRY_CONFIG.maxDelay);
 ```
 
 **Service Clients:**
 
 ```typescript
-// BYTEZ API Client (OpenAI-compatible)
-import OpenAI from "openai";
-const bytezClient = new OpenAI({
-    apiKey: process.env.BYTEZ_API_KEY_1,
-    baseURL: "https://api.bytez.com/models/v2/openai/v1"
+// Amazon Bedrock Runtime Client
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
+const bedrockClient = new BedrockRuntimeClient({
+    region: process.env.AWS_REGION || "us-east-1",
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
 });
 
-// Supabase Client
-import { createClient } from '@supabase/supabase-js';
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// DynamoDB Document Client
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" });
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 ```
 
 
@@ -461,7 +460,7 @@ export type AgentType =
 
 export interface AgentConfig {
   name: string              // Display name
-  model: string             // BYTEZ model ID
+  model: string             // Amazon Bedrock model ID
   systemPrompt: string      // Agent instructions
   maxTokens: number         // Response limit
   temperature: number       // Creativity (0-1)
@@ -470,20 +469,20 @@ export interface AgentConfig {
 }
 ```
 
-**Model Assignments (BYTEZ API):**
+**Model Assignments (Amazon Bedrock):**
 
-| Agent | BYTEZ Model ID | Rationale |
-|-------|----------------|-----------|
-| Orchestrator | anthropic/claude-sonnet-4-5 | Fast routing, low latency |
-| Project Initializer | anthropic/claude-opus-4-5 | Best conversational quality |
-| Conversational | anthropic/claude-opus-4-5 | Elite reasoning for requirements |
-| BOM Generator | anthropic/claude-opus-4-5 | Critical component selection |
-| Code Generator | anthropic/claude-sonnet-4-5 | SOTA code generation |
-| Wiring Diagram | anthropic/claude-sonnet-4-5 | Spatial reasoning |
-| Circuit Verifier | google/gemini-2.5-flash | Vision capabilities for image analysis |
-| Datasheet Analyzer | anthropic/claude-opus-4-5 | Document comprehension |
-| Budget Optimizer | anthropic/claude-sonnet-4-5 | Multi-constraint optimization |
-| Conversation Summarizer | anthropic/claude-sonnet-4-5 | Concise summarization |
+| Agent | Amazon Bedrock Model ID | Rationale |
+|-------|------------------------|-----------||
+| Orchestrator | anthropic.claude-3-5-sonnet-20241022-v2:0 | Fast routing, low latency |
+| Project Initializer | anthropic.claude-3-opus-20240229-v1:0 | Best conversational quality |
+| Conversational | anthropic.claude-3-opus-20240229-v1:0 | Elite reasoning for requirements |
+| BOM Generator | anthropic.claude-3-opus-20240229-v1:0 | Critical component selection |
+| Code Generator | anthropic.claude-3-5-sonnet-20241022-v2:0 | SOTA code generation |
+| Wiring Diagram | anthropic.claude-3-5-sonnet-20241022-v2:0 | Spatial reasoning |
+| Circuit Verifier | anthropic.claude-3-5-sonnet-20241022-v2:0 | Vision capabilities for image analysis |
+| Datasheet Analyzer | anthropic.claude-3-opus-20240229-v1:0 | Document comprehension |
+| Budget Optimizer | anthropic.claude-3-5-sonnet-20241022-v2:0 | Multi-constraint optimization |
+| Conversation Summarizer | anthropic.claude-3-5-sonnet-20241022-v2:0 | Concise summarization |
 
 **System Prompt Structure:**
 
@@ -506,75 +505,81 @@ systemPrompt: `You're the components specialist whose BOMs have never caused a v
 2. **Real parts only** - Exact part numbers from DigiKey/Mouser/SparkFun
 3. **Safety nets** - GPIO pins max 20-40mA, check I2C address conflicts
 
-**CRITICAL - You MUST call BOTH tools in the SAME response:**
-1. **open_bom_drawer()** - Opens the drawer immediately
-2. **update_bom()** - Populate with validated component data
-
-DO NOT use <BOM_CONTAINER> tags. Always use the tool calls.`
+**CRITICAL - Use write_file tool:**\r\nCall **write_file(artifact_type='bom', content=JSON.stringify(bomData))** with validated component data.\r\n\r\nDO NOT use <BOM_CONTAINER> tags. Always use the write_file tool.`
 ```
 
 ### 6. Tool System
 
 **Location:** `lib/agents/tools.ts`
 
-**Tool Categories:**
+**Minimal Essential Tools:**
 
-1. **Drawer Opening Tools** (No arguments, UI notification)
-   - `open_context_drawer()`
-   - `open_bom_drawer()`
-   - `open_code_drawer()`
-   - `open_wiring_drawer()`
-   - `open_budget_drawer()`
+Instead of having separate tools for each operation (update_bom, add_code_file, open_drawer, etc.), we use a **universal file I/O approach** where agents directly read and write artifacts using standard file operations.
 
-2. **Content Update Tools** (With data, DB persistence)
-   - `update_context(context: string)`
-   - `update_mvp(mvp: string)`
-   - `update_prd(prd: string)`
-   - `update_bom(bomData: BOMData)`
-   - `add_code_file(filename, language, content, description)`
-   - `update_wiring(connections, instructions, warnings)`
-   - `update_budget(originalCost, optimizedCost, recommendations)`
+1. **`read_file(artifact_type, file_path?)`**
+   - Read any artifact from DynamoDB
+   - Returns latest version of artifact content
+   - Supports reading specific files within code artifacts
 
-3. **File I/O Tools** (Read/write artifacts)
-   - `read_file(artifact_type, file_path?)`
-   - `write_file(artifact_type, content, merge_strategy?, file_path?, language?)`
+2. **`write_file(artifact_type, content, merge_strategy?, file_path?, language?)`**
+   - Write any artifact to DynamoDB
+   - Creates new version automatically
+   - Supports merge strategies: `replace`, `append`, `merge`
+   - Handles all artifact types: context, bom, code, wiring, budget
 
-**Tool Schema Example:**
+**Tool Schema:**
 
 ```typescript
-update_bom: {
-  name: "update_bom",
-  description: "Update the Bill of Materials drawer with validated component list...",
+read_file: {
+  name: "read_file",
+  description: "Read an artifact from the database. Returns the latest version.",
   parameters: {
     type: "object",
     properties: {
-      project_name: { type: "string" },
-      summary: { type: "string" },
-      components: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            partNumber: { type: "string" },
-            quantity: { type: "number" },
-            voltage: { type: "string" },
-            current: { type: "string" },
-            estimatedCost: { type: "number" },
-            supplier: { type: "string" },
-            link: { type: "string" },
-            notes: { type: "string" },
-            alternatives: { type: "array", items: { type: "string" } }
-          },
-          required: ["name", "partNumber", "quantity"]
-        }
+      artifact_type: {
+        type: "string",
+        enum: ["context", "mvp", "prd", "bom", "code", "wiring", "budget", "conversation_summary"],
+        description: "Type of artifact to read"
       },
-      totalCost: { type: "number" },
-      powerAnalysis: { type: "object" },
-      warnings: { type: "array", items: { type: "string" } },
-      assemblyNotes: { type: "array", items: { type: "string" } }
+      file_path: {
+        type: "string",
+        description: "Optional: specific file path for code artifacts (e.g., 'main.cpp')"
+      }
     },
-    required: ["project_name", "components", "totalCost"]
+    required: ["artifact_type"]
+  }
+}
+
+write_file: {
+  name: "write_file",
+  description: "Write an artifact to the database. Creates a new version automatically.",
+  parameters: {
+    type: "object",
+    properties: {
+      artifact_type: {
+        type: "string",
+        enum: ["context", "mvp", "prd", "bom", "code", "wiring", "budget"],
+        description: "Type of artifact to write"
+      },
+      content: {
+        type: "string",
+        description: "Content to write (JSON string for structured data, plain text for code)"
+      },
+      merge_strategy: {
+        type: "string",
+        enum: ["replace", "append", "merge"],
+        description: "How to handle existing content (default: replace)"
+      },
+      file_path: {
+        type: "string",
+        description: "For code artifacts: filename (e.g., 'main.cpp')"
+      },
+      language: {
+        type: "string",
+        description: "For code artifacts: programming language (e.g., 'cpp', 'python')"
+      }
+    },
+    required: ["artifact_type", "content"]
   }
 }
 ```
@@ -583,40 +588,31 @@ update_bom: {
 
 ```typescript
 export function getToolsForAgent(agentType: string): any[] {
+  // All agents get the same minimal toolset
+  const allTools = ['read_file', 'write_file']
+  
   const toolMap: Record<string, string[]> = {
-    conversational: [
-      'read_file', 'write_file',
-      'open_context_drawer', 'update_context', 'update_mvp', 'update_prd'
-    ],
-    projectInitializer: [
-      'read_file', 'write_file',
-      'open_context_drawer', 'update_context', 'update_mvp', 'update_prd'
-    ],
-    bomGenerator: [
-      'read_file', 'write_file',
-      'open_bom_drawer', 'update_bom'
-    ],
-    codeGenerator: [
-      'read_file', 'write_file',
-      'open_code_drawer', 'add_code_file'
-    ],
-    wiringDiagram: [
-      'read_file', 'write_file',
-      'open_wiring_drawer', 'update_wiring'
-    ],
-    budgetOptimizer: [
-      'read_file', 'write_file',
-      'open_budget_drawer', 'update_budget'
-    ],
-    conversationSummarizer: ['read_file'],
-    orchestrator: [],
-    circuitVerifier: [],
-    datasheetAnalyzer: []
+    conversational: allTools,
+    projectInitializer: allTools,
+    bomGenerator: allTools,
+    codeGenerator: allTools,
+    wiringDiagram: allTools,
+    budgetOptimizer: allTools,
+    conversationSummarizer: ['read_file'],  // Read-only
+    orchestrator: [],  // No tools needed
+    circuitVerifier: [],  // No tools needed
+    datasheetAnalyzer: []  // No tools needed
   }
   
-  return toolMap[agentType]?.map(name => DRAWER_TOOLS[name]) || []
+  return toolMap[agentType]?.map(name => TOOLS[name]) || []
 }
 ```
+
+**Benefits of Minimal Tool Approach:**
+- **Simpler**: Only 2 tools instead of 15+
+- **More Flexible**: Agents can read/write any artifact type
+- **Less Maintenance**: No need to update tool schemas for new artifact types
+- **Clearer Intent**: File operations are explicit and understandable
 
 ### 7. ToolExecutor
 
@@ -624,9 +620,8 @@ export function getToolsForAgent(agentType: string): any[] {
 
 **Responsibilities:**
 - Parse tool calls from agent responses
-- Execute drawer-opening tools (emit UI events)
-- Execute content-update tools (persist to database)
-- Handle file I/O operations
+- Execute read_file operations (retrieve from database)
+- Execute write_file operations (persist to database with versioning)
 
 **Key Methods:**
 
@@ -634,53 +629,77 @@ export function getToolsForAgent(agentType: string): any[] {
 class ToolExecutor {
   constructor(chatId: string)
   
-  async executeToolCall(toolCall: ToolCall): Promise<void> {
+  async executeToolCall(toolCall: ToolCall): Promise<any> {
     const { name, arguments: args } = toolCall
     
-    // Drawer opening tools
-    if (name.startsWith('open_')) {
-      await this.handleDrawerOpen(name)
+    if (name === 'read_file') {
+      return await this.handleReadFile(args)
     }
-    // Content update tools
-    else if (name.startsWith('update_') || name === 'add_code_file') {
-      await this.handleContentUpdate(name, args)
+    else if (name === 'write_file') {
+      return await this.handleWriteFile(args)
     }
-    // File I/O tools
-    else if (name === 'read_file' || name === 'write_file') {
-      await this.handleFileIO(name, args)
+    else {
+      throw new Error(`Unknown tool: ${name}`)
     }
   }
   
-  private async handleDrawerOpen(toolName: string): Promise<void>
+  private async handleReadFile(args: any): Promise<any>
   
-  private async handleContentUpdate(toolName: string, args: any): Promise<void>
-  
-  private async handleFileIO(toolName: string, args: any): Promise<any>
+  private async handleWriteFile(args: any): Promise<void>
 }
 ```
 
 **Tool Execution Flow:**
 
 ```typescript
-// 1. Drawer Opening (UI notification only)
-async handleDrawerOpen(toolName: string) {
-  const drawerType = toolName.replace('open_', '').replace('_drawer', '')
-  console.log(`🎨 Opening ${drawerType} drawer`)
-  // Client receives tool_call event and opens drawer
+// 1. Read File (Retrieve from DynamoDB)
+async handleReadFile(args: { artifact_type: string, file_path?: string }) {
+  const { artifact_type, file_path } = args
+  
+  // Get latest artifact version
+  const artifact = await ArtifactService.getLatestArtifact(this.chatId, artifact_type)
+  if (!artifact) return null
+  
+  // For code artifacts with file_path, return specific file
+  if (artifact_type === 'code' && file_path) {
+    const version = await ArtifactService.getLatestVersion(artifact.id)
+    return version?.content  // Return file content
+  }
+  
+  // For other artifacts, return full content
+  const version = await ArtifactService.getLatestVersion(artifact.id)
+  return version?.content_json || version?.content
 }
 
-// 2. Content Update (Database persistence)
-async handleContentUpdate(toolName: string, args: any) {
-  const artifactType = this.getArtifactType(toolName)
+// 2. Write File (Persist to DynamoDB with versioning)
+async handleWriteFile(args: {
+  artifact_type: string,
+  content: string,
+  merge_strategy?: 'replace' | 'append' | 'merge',
+  file_path?: string,
+  language?: string
+}) {
+  const { artifact_type, content, merge_strategy = 'replace', file_path, language } = args
   
   // Create or get artifact container
-  let artifact = await ArtifactService.getLatestArtifact(this.chatId, artifactType)
+  let artifact = await ArtifactService.getLatestArtifact(this.chatId, artifact_type)
   if (!artifact) {
     artifact = await ArtifactService.createArtifact('system', {
       chat_id: this.chatId,
-      type: artifactType,
-      title: this.getArtifactTitle(artifactType)
+      type: artifact_type,
+      title: this.getArtifactTitle(artifact_type)
     })
+  }
+  
+  // Handle merge strategies
+  let finalContent = content
+  if (merge_strategy !== 'replace') {
+    const existing = await this.handleReadFile({ artifact_type, file_path })
+    if (existing) {
+      finalContent = merge_strategy === 'append' 
+        ? existing + '\n' + content
+        : this.mergeContent(existing, content)
+    }
   }
   
   // Create new version
@@ -688,12 +707,14 @@ async handleContentUpdate(toolName: string, args: any) {
   await ArtifactService.createVersion({
     artifact_id: artifact.id,
     version_number: versionNumber,
-    content: toolName === 'add_code_file' ? args.content : undefined,
-    content_json: toolName !== 'add_code_file' ? args : undefined,
-    filename: args.filename,
-    language: args.language,
-    file_path: args.file_path
+    content: artifact_type === 'code' ? finalContent : undefined,
+    content_json: artifact_type !== 'code' ? JSON.parse(finalContent) : undefined,
+    filename: file_path,
+    language: language,
+    file_path: file_path
   })
+  
+  console.log(`✅ Wrote ${artifact_type} artifact (version ${versionNumber})`)
 }
 ```
 
@@ -1036,7 +1057,7 @@ Client queries latest version:
 
 ## Real-Time Subscription Architecture
 
-### Supabase Real-time Implementation
+### AWS AppSync Real-time Implementation
 
 **Location:** Client-side components
 
@@ -1227,40 +1248,36 @@ while (true) {
 **Failover Flow:**
 
 ```typescript
-async executeWithRetry<T>(operation, operationName) {
-  const totalKeys = keyManager.getTotalKeys()
+async executeWithRetry<T>(operation: (client: BedrockRuntimeClient) => Promise<T>): Promise<T> {
+  const maxRetries = 4
   let attempt = 0
   
-  while (attempt < totalKeys) {
+  while (attempt <= maxRetries) {
     try {
-      const client = await BytezClient.getInstance()
+      const client = await BedrockClient.getInstance()
       const result = await operation(client)
-      keyManager.recordSuccess()
       return result
     } catch (error) {
       attempt++
       
-      if (this.isQuotaError(error)) {
-        // Mark key as failed permanently
-        keyManager.markCurrentKeyAsFailed()
-        
-        // Try to rotate
-        const rotated = keyManager.rotateKey()
-        if (!rotated) {
-          throw new Error(`All ${totalKeys} API keys exhausted`)
+      if (this.isThrottlingError(error)) {
+        if (attempt > maxRetries) {
+          throw new Error(`Amazon Bedrock throttling - max retries exceeded`)
         }
         
-        // Force client refresh and retry
-        await BytezClient.getInstance(true)
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 16000)
+        console.log(`⏳ Bedrock throttled, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`)
+        await new Promise(resolve => setTimeout(resolve, delay))
         continue
       }
       
-      // Non-quota error - don't retry
+      // Non-throttling error - don't retry
       throw error
     }
   }
   
-  throw new Error(`Failed after ${totalKeys} attempts`)
+  throw new Error(`Failed after ${maxRetries} attempts`)
 }
 ```
 
@@ -1275,10 +1292,13 @@ async addMessage(message: MessageInsert) {
   
   while (attempts < maxAttempts) {
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert(message)
-        .select()
+      const command = new PutCommand({
+        TableName: process.env.DYNAMODB_MESSAGES_TABLE,
+        Item: message
+      })
+      
+      await docClient.send(command)
+      return message
         .single()
       
       if (error) throw error
@@ -1809,14 +1829,16 @@ for (const artifact of artifacts) {
   const versions = await getVersions(artifact.id)
 }
 
-// Good: Single query with join
-const artifactsWithVersions = await supabase
-  .from('artifacts')
-  .select(`
-    *,
-    artifact_versions!inner(*)
-  `)
-  .eq('chat_id', chatId)
+// Good: Single query with GSI
+const command = new QueryCommand({
+  TableName: process.env.DYNAMODB_ARTIFACTS_TABLE,
+  IndexName: 'chat-artifacts-index',
+  KeyConditionExpression: 'chat_id = :chatId',
+  ExpressionAttributeValues: {
+    ':chatId': chatId
+  }
+})
+const artifactsWithVersions = await docClient.send(command)
 ```
 
 3. **Streaming Chunk Size**
@@ -1863,47 +1885,46 @@ const CodeDrawer = lazy(() => import('./tools/CodeDrawer'))
 </Suspense>
 ```
 
-## Security Considerations
+### IAM Policies and Access Control
 
-### Row-Level Security (RLS)
+**DynamoDB IAM Policies:**
 
-**Supabase Policies:**
-
-```sql
--- Users can only see their own chats
-CREATE POLICY "Users can view own chats"
-ON chats FOR SELECT
-USING (auth.uid() = user_id);
-
--- Users can only insert messages to their own chats
-CREATE POLICY "Users can insert own messages"
-ON messages FOR INSERT
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM chats
-    WHERE chats.id = messages.chat_id
-    AND chats.user_id = auth.uid()
-  )
-);
-
--- Users can only view artifacts from their own chats
-CREATE POLICY "Users can view own artifacts"
-ON artifacts FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM chats
-    WHERE chats.id = artifacts.chat_id
-    AND chats.user_id = auth.uid()
-  )
-);
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:*:*:table/ohm-chats",
+        "arn:aws:dynamodb:*:*:table/ohm-messages",
+        "arn:aws:dynamodb:*:*:table/ohm-artifacts"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "dynamodb:LeadingKeys": ["${cognito-identity.amazonaws.com:sub}"]
+        }
+      }
+    }
+  ]
+}
 ```
 
-### API Key Protection
+### AWS Credentials Protection
 
 ```typescript
-// NEVER expose API keys to client
-// Keys are loaded server-side only
-const keys = process.env.BYTEZ_API_KEY_1  // Server environment only
+// NEVER expose AWS credentials to client
+// Credentials are loaded server-side only
+const credentials = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,  // Server environment only
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+}
 
 // Client-side API calls go through Next.js API routes
 // which run on the server
@@ -1954,34 +1975,47 @@ import DOMPurify from 'dompurify'
 
 ### Production Environment
 
-**Hosting:** Vercel (Next.js optimized)
-**Database:** Supabase (Managed PostgreSQL)
-**AI Service:** BYTEZ API (Multi-region)
+**Hosting:** AWS Amplify (Next.js optimized)
+**Database:** Amazon DynamoDB (NoSQL)
+**AI Service:** Amazon Bedrock (Multi-region)
+**Real-time:** AWS AppSync (GraphQL subscriptions)
 
 **Environment Variables:**
 
 ```bash
-# Database
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
-SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=xxx...
 
-# AI Service (Server-side only)
-BYTEZ_API_KEY_1=sk-xxx...
-BYTEZ_API_KEY_2=sk-xxx...
-BYTEZ_API_KEY_3=sk-xxx...
+# DynamoDB Tables
+DYNAMODB_CHATS_TABLE=ohm-chats
+DYNAMODB_MESSAGES_TABLE=ohm-messages
+DYNAMODB_ARTIFACTS_TABLE=ohm-artifacts
+DYNAMODB_ARTIFACT_VERSIONS_TABLE=ohm-artifact-versions
+
+# S3 Configuration
+S3_BUCKET_NAME=ohm-file-uploads
+
+# AppSync Configuration
+APPSYNC_API_URL=https://xxx.appsync-api.us-east-1.amazonaws.com/graphql
+APPSYNC_API_KEY=da2-xxx...
+
+# Cognito Configuration
+COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
+COGNITO_CLIENT_ID=xxx...
 
 # Application
-NEXT_PUBLIC_APP_URL=https://ohm.app
+NEXT_PUBLIC_APP_URL=https://ohm.amplifyapp.com
 NODE_ENV=production
 ```
 
 ### Scaling Considerations
 
-1. **Horizontal Scaling** - Vercel auto-scales serverless functions
-2. **Database Connection Pooling** - Supabase handles automatically
-3. **CDN Caching** - Static assets cached at edge
-4. **Rate Limiting** - Implemented at API route level
+1. **Horizontal Scaling** - AWS Amplify auto-scales serverless functions
+2. **Database Auto-Scaling** - DynamoDB auto-scales read/write capacity
+3. **CDN Caching** - CloudFront caches static assets at edge
+4. **Rate Limiting** - Implemented at API Gateway level
 
 ```typescript
 // Simple rate limiting
@@ -2063,18 +2097,19 @@ export async function GET() {
   const totalKeys = keyManager.getTotalKeys()
   
   // Check database connection
-  const { error: dbError } = await supabase.from('chats').select('id').limit(1)
+  const command = new GetCommand({
+    TableName: process.env.DYNAMODB_CHATS_TABLE,
+    Key: { id: 'health-check' }
+  })
+  const { Item: dbItem } = await docClient.send(command).catch(() => ({ Item: null }))
   
   return Response.json({
-    status: healthyKeys > 0 && !dbError ? 'healthy' : 'degraded',
+    status: !dbError ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     services: {
       database: !dbError ? 'up' : 'down',
-      ai_api: healthyKeys > 0 ? 'up' : 'down',
-      keys: {
-        healthy: healthyKeys,
-        total: totalKeys
-      }
+      bedrock: 'up',
+      region: process.env.AWS_REGION || 'us-east-1'
     }
   })
 }

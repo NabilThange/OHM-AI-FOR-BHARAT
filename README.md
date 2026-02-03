@@ -3,8 +3,8 @@
 **Last Updated: February 3, 2026**
 
 > **🏆 AWS HACKATHON SUBMISSION**
-> This document showcases OHM as a **fully AWS-native application** leveraging the complete AWS ecosystem.
-> Built from the ground up using Amazon Bedrock, DynamoDB, AppSync, S3, Amplify, and more.
+> This document showcases OHM.
+> Built using Amazon Bedrock, DynamoDB, AppSync, S3, Amplify, and more.
 
 ---
 
@@ -103,7 +103,7 @@ User Query
 | **Temperature** | 0.7 |
 | **Max Tokens** | 2000 |
 | **Role** | Quick-start wizard - transforms vague ideas into concrete project direction |
-| **Tools** | `update_context`, `update_mvp`, `update_prd` |
+| **Tools** | `read_file`, `write_file` |
 
 ### 3. Conversational Agent (Subsequent Messages)
 | Property | Value |
@@ -112,7 +112,7 @@ User Query
 | **Temperature** | 0.8 (higher for creative conversation) |
 | **Max Tokens** | 3000 |
 | **Role** | The idea-to-blueprint translator - guides user through requirements |
-| **Tools** | `update_context`, `update_mvp`, `update_prd` |
+| **Tools** | `read_file`, `write_file` |
 
 ### 4. BOM Generator
 | Property | Value |
@@ -121,7 +121,7 @@ User Query
 | **Temperature** | 0.2 (low for precision) |
 | **Max Tokens** | 25000 |
 | **Role** | Creates validated Bill of Materials with voltage/current checks |
-| **Tools** | `update_bom` |
+| **Tools** | `read_file`, `write_file` |
 
 ### 5. Code Generator
 | Property | Value |
@@ -130,7 +130,7 @@ User Query
 | **Temperature** | 0.2 (low for consistent code) |
 | **Max Tokens** | 16000 |
 | **Role** | Writes production-ready firmware (Arduino C++, MicroPython) |
-| **Tools** | `add_code_file` |
+| **Tools** | `read_file`, `write_file` |
 
 ### 6. Wiring Specialist
 | Property | Value |
@@ -139,7 +139,7 @@ User Query
 | **Temperature** | 0.15 (very low for precision) |
 | **Max Tokens** | 4000 |
 | **Role** | Creates step-by-step wiring instructions with safety warnings |
-| **Tools** | `update_wiring` |
+| **Tools** | `read_file`, `write_file` |
 
 ### 7. Circuit Verifier (Vision Agent)
 | Property | Value |
@@ -166,7 +166,7 @@ User Query
 | **Temperature** | 0.3 |
 | **Max Tokens** | 25000 |
 | **Role** | Finds cost savings without sacrificing quality |
-| **Tools** | `update_budget` |
+| **Tools** | `read_file`, `write_file` |
 
 ### 10. Conversation Summarizer
 | Property | Value |
@@ -207,15 +207,13 @@ User Query
 
 | Tool | Description | Used By |
 |------|-------------|---------|
-| `update_context` | Project context (Overview, Background, Constraints) | Conversational, ProjectInitializer |
-| `update_mvp` | MVP specification (Core Features, Success Metrics) | Conversational, ProjectInitializer |
-| `update_prd` | Product Requirements Document | Conversational, ProjectInitializer |
-| `update_bom` | Bill of Materials with components and pricing | BOM Generator |
-| `add_code_file` | Add code files (accumulates multiple files) | Code Generator |
-| `update_wiring` | Wiring connections and instructions | Wiring Specialist |
-| `update_budget` | Budget optimization recommendations | Budget Optimizer |
-| `read_file` | Read existing artifacts | All agents |
-| `write_file` | Universal file writing with merge strategies | All agents |
+| `read_file` | Read any artifact from DynamoDB (context, bom, code, wiring, budget, etc.) | All agents |
+| `write_file` | Write any artifact to DynamoDB with versioning and merge strategies | All agents |
+
+**Benefits of Minimal Tool Approach:**
+- **Simpler**: Only 2 tools instead of 15+
+- **More Flexible**: Agents can read/write any artifact type
+- **Less Maintenance**: No need to update tool schemas for new artifact types
 
 ## 4.  Drawer System (To Be Implemented)
 **Planned from `components/tools/` directory:**
@@ -334,7 +332,7 @@ User Query
 -  Diagram queue system for background processing
 
 **What's MISSING:**
--  AI-generated breadboard images (requires BYTEZ API integration)
+-  AI-generated breadboard images (requires visual generation service integration)
 -  Interactive diagram component
 -  Complete visual diagram display in drawer
 

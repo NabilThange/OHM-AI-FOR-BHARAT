@@ -29,7 +29,7 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 2. WHEN the Project Initializer receives a project description, THE System SHALL generate a concise project title (3-6 words)
 3. WHEN the Project Initializer gathers requirements, THE System SHALL ask 2-3 critical questions maximum (goal, deployment environment, budget)
 4. WHEN sufficient information is gathered, THE System SHALL create Context, MVP, and PRD artifacts
-5. WHEN artifacts are created, THE System SHALL call open_context_drawer() followed by update_context(), update_mvp(), and update_prd() tools
+5. WHEN artifacts are created, THE System SHALL call write_file() with artifact_type and content
 
 ### Requirement 2: Multi-Agent Orchestration
 
@@ -52,7 +52,7 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 1. WHEN the BOM Generator receives a project description, THE System SHALL select components with exact part numbers from real distributors (DigiKey, Mouser, SparkFun)
 2. WHEN components are selected, THE System SHALL verify voltage compatibility (3.3V vs 5V logic levels)
 3. WHEN the BOM is generated, THE System SHALL calculate total current consumption and recommend appropriate power supply
-4. WHEN the BOM is complete, THE System SHALL call open_bom_drawer() followed by update_bom() with component data
+4. WHEN the BOM is complete, THE System SHALL call write_file() with artifact_type='bom' and component data
 5. WHEN voltage mismatches are detected, THE System SHALL include warnings in the BOM artifact
 
 ### Requirement 4: Code Generation
@@ -64,7 +64,7 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 1. WHEN the Code Generator receives a request, THE System SHALL generate multiple files (main.cpp, config.h, platformio.ini)
 2. WHEN generating code, THE System SHALL use non-blocking patterns (millis() instead of delay())
 3. WHEN generating code, THE System SHALL include error handling for sensor failures and I2C timeouts
-4. WHEN code is generated, THE System SHALL call open_code_drawer() followed by add_code_file() for each file
+4. WHEN code is generated, THE System SHALL call write_file() with artifact_type='code' for each file
 5. WHEN code references hardware pins, THE System SHALL use exact GPIO numbers from the BOM
 
 ### Requirement 5: Wiring Instructions
@@ -76,7 +76,7 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 1. WHEN the Wiring Specialist generates instructions, THE System SHALL specify exact pin-to-pin connections
 2. WHEN connections are defined, THE System SHALL mandate RED wires for VCC and BLACK wires for GND
 3. WHEN voltage level shifters are needed, THE System SHALL include them in the connection list
-4. WHEN wiring is generated, THE System SHALL call open_wiring_drawer() followed by update_wiring()
+4. WHEN wiring is generated, THE System SHALL call write_file() with artifact_type='wiring'
 5. WHEN polarity-sensitive components are present, THE System SHALL include explicit polarity warnings
 
 ### Requirement 6: Real-Time Streaming
@@ -134,8 +134,8 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 #### Acceptance Criteria
 
 1. WHEN an agent calls a tool, THE Tool Executor SHALL parse the tool name and arguments
-2. WHEN a drawer-opening tool is called (open_context_drawer, open_bom_drawer, etc.), THE System SHALL send a drawer_open event to the client
-3. WHEN a content-update tool is called (update_context, update_bom, add_code_file, etc.), THE System SHALL persist the artifact to the database
+2. WHEN a drawer-opening tool is called, THE System SHALL send a drawer_open event to the client
+3. WHEN write_file() is called, THE System SHALL persist the artifact to the database
 4. WHEN artifacts are updated, THE System SHALL create a new artifact_version with incremented version_number
 5. WHEN tool execution fails, THE System SHALL log the error but continue agent execution
 
@@ -172,7 +172,7 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 1. WHEN the Budget Optimizer receives a BOM, THE System SHALL analyze each component for cost-saving opportunities
 2. WHEN alternatives are found, THE System SHALL provide tradeoff analysis (LOW, MEDIUM, HIGH risk)
 3. WHEN recommending alternatives, THE System SHALL explain what's different and why it's acceptable
-4. WHEN budget optimization is complete, THE System SHALL call open_budget_drawer() followed by update_budget()
+4. WHEN budget optimization is complete, THE System SHALL call write_file() with artifact_type='budget'
 5. WHEN quality-critical components are identified, THE System SHALL warn against cheaper alternatives
 
 ### Requirement 14: Datasheet Analysis
@@ -274,9 +274,9 @@ OHM (Hardware Orchestrator) is an AI-powered IoT/Hardware Development IDE that b
 - Real-time message delivery: <100ms latency
 
 ### Security
-- Row-Level Security (RLS) on all Supabase tables
-- API keys stored in environment variables only
-- User authentication via Supabase Auth
+- IAM-based access control on all DynamoDB tables
+- AWS credentials stored in environment variables only
+- User authentication via Amazon Cognito
 - No PII in logs or error messages
 
 ### Usability
