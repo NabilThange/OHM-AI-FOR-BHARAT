@@ -13,7 +13,7 @@
     1. [What is OHM?](#what-is-ohm)
     2. [Current Technology Stack](#current-technology-stack)
     3. [Multi-Agent AI System](#multi-agent-ai-system)
-    4. [✅ IMPLEMENTED FEATURES](#implemented-features)
+    4. [📋 PLANNED FEATURES](#planned-features)
     5. [⚠️ PLANNED FEATURES (NOT YET IMPLEMENTED)](#planned-features-not-yet-implemented)
     6. [User Flow](#user-flow)
     7. [Project Architecture](#project-architecture)
@@ -43,22 +43,22 @@
 
     | Category | AWS Service | Purpose |
     |----------|-------------|---------|
-    | **Frontend Framework** | Next.js 15.1.6 with React 19 | ✅ |
-    | **Language** | TypeScript | ✅ |
-    | **Styling** | Tailwind CSS 3.4.17 | ✅ |
-    | **UI Components** | Radix UI + Ark UI | ✅ |
-    | **Animations** | Framer Motion 12.24.11 | ✅ |
-    | **Icons** | Lucide React | ✅ |
-    | **Content Rendering** | React Markdown + remark-gfm | ✅ |
-    | **AI Service** | Amazon Bedrock (Claude 3.5 Sonnet, Claude 3 Opus) | ✅ |
-    | **Database** | Amazon DynamoDB with Global Secondary Indexes | ✅ |
-    | **Realtime Data** | AWS AppSync with DynamoDB Streams | ✅ |
-    | **File Storage** | Amazon S3 with presigned URLs | ✅ |
-    | **Hosting** | AWS Amplify with CI/CD | ✅ |
-    | **Serverless APIs** | AWS Lambda Functions | ✅ |
-    | **Authentication** | Amazon Cognito User Pools | ✅ |
-    | **Monitoring** | Amazon CloudWatch + X-Ray | ✅ |
-    | **Access Control** | IAM Roles + Cognito Identity Pools | ✅ |
+    | **Frontend Framework** | Next.js 15.1.6 with React 19 | 🔄 |
+    | **Language** | TypeScript | 🔄 |
+    | **Styling** | Tailwind CSS 3.4.17 | 🔄 |
+    | **UI Components** | Radix UI + Ark UI | 🔄 |
+    | **Animations** | Framer Motion 12.24.11 | 🔄 |
+    | **Icons** | Lucide React | 🔄 |
+    | **Content Rendering** | React Markdown + remark-gfm | 🔄 |
+    | **AI Service** | Amazon Bedrock (Claude 3.5 Sonnet, Claude 3 Opus) | 🔄 |
+    | **Database** | Amazon DynamoDB with Global Secondary Indexes | 🔄 |
+    | **Realtime Data** | AWS AppSync with DynamoDB Streams | 🔄 |
+    | **File Storage** | Amazon S3 with presigned URLs | 🔄 |
+    | **Hosting** | AWS Amplify with CI/CD | 🔄 |
+    | **Serverless APIs** | AWS Lambda Functions | 🔄 |
+    | **Authentication** | Amazon Cognito User Pools | 🔄 |
+    | **Monitoring** | Amazon CloudWatch + X-Ray | 🔄 |
+    | **Access Control** | IAM Roles + Cognito Identity Pools | 🔄 |
 
     ---
 
@@ -66,9 +66,9 @@
 
     ## Architecture Overview
 
-    OHM employs a **"Sequential Assembly Line"** architecture where specialized AI agents collaborate to guide a user from a vague idea to a fully verified hardware prototype.
+    OHM will employ a **"Sequential Assembly Line"** architecture where specialized AI agents will collaborate to guide a user from a vague idea to a fully verified hardware prototype.
 
-    **Verified from `lib/agents/config.ts`:**
+    **Planned from `lib/agents/config.ts`:**
 
     ```
     User Query
@@ -86,7 +86,7 @@
         └─ [Amazon Bedrock Claude 3.5 Sonnet] ──────→ Conversation Summarizer
     ```
 
-    ## Agent Details (Verified from Config)
+    ## Agent Details (Planned from Config)
 
     ### 1. Orchestrator
     | Property | Value |
@@ -180,10 +180,10 @@
 
 ---
 
-# ✅ IMPLEMENTED FEATURES
+# ✅ PLANNED FEATURES
 
     ## 1. 🎨 UI & Design System
-    **Verified Components:**
+    **Planned Components:**
     - **Landing Page** (`components/LandingPage.tsx`)
     - **Project Creator** (`components/text_area/ProjectCreator.tsx`) - with user level/complexity selection
     - **AI Chat Interface** (`components/ai_chat/AIAssistantUI.jsx`) - full chat UI
@@ -193,17 +193,17 @@
     - **Mesh Gradient** background effects
     - **Faulty Terminal** animation component
 
-    ## 2. 🤖 Real AI Integration (Fully Working)
-    **Verified from `lib/agents/orchestrator.ts` and API routes:**
-    - ✅ **Amazon Bedrock Integration** via AWS SDK with Claude 3.5 Sonnet and Claude 3 Opus models
-    - ✅ **Multi-Agent Orchestration** - automatic routing based on intent
-    - ✅ **Streaming Responses** - real-time token-by-token updates via Bedrock ConverseStream API
-    - ✅ **Model Failover** - automatic retry with exponential backoff on throttling errors (`lib/agents/bedrock-client.ts`)
-    - ✅ **Tool Calling** - agents can call structured tools via Bedrock function calling
-    - ✅ **SSE (Server-Sent Events)** for streaming (`app/api/agents/chat/route.ts`)
+    ## 2. 🤖 Real AI Integration (To Be Implemented)
+    **Planned from `lib/agents/orchestrator.ts` and API routes:**
+    - 🔄 **Amazon Bedrock Integration** via AWS SDK with Claude 3.5 Sonnet and Claude 3 Opus models
+    - 🔄 **Multi-Agent Orchestration** - automatic routing based on intent
+    - 🔄 **Streaming Responses** - real-time token-by-token updates via Bedrock ConverseStream API
+    - 🔄 **Model Failover** - automatic retry with exponential backoff on throttling errors (`lib/agents/bedrock-client.ts`)
+    - 🔄 **Tool Calling** - agents can call structured tools via Bedrock function calling
+    - 🔄 **SSE (Server-Sent Events)** for streaming (`app/api/agents/chat/route.ts`)
 
-    ## 3. 🛠️ Tool System (Fully Implemented)
-    **Verified from `lib/agents/tools.ts` and `lib/agents/tool-executor.ts`:**
+    ## 3. 🛠️ Tool System (To Be Implemented)
+    **Planned from `lib/agents/tools.ts` and `lib/agents/tool-executor.ts`:**
 
     | Tool | Description | Used By |
     |------|-------------|---------|
@@ -217,56 +217,56 @@
     | `read_file` | Read existing artifacts | All agents |
     | `write_file` | Universal file writing with merge strategies | All agents |
 
-    ## 4. 📦 Drawer System (Fully Implemented)
-    **Verified from `components/tools/` directory:**
+    ## 4. 📦 Drawer System (To Be Implemented)
+    **Planned from `components/tools/` directory:**
 
     | Drawer | File | Status |
     |--------|------|--------|
-    | **Context Drawer** | `ContextDrawer.tsx` | ✅ Full - Displays Context/MVP/PRD with tree navigation |
-    | **BOM Drawer** | `BOMDrawer.tsx` | ✅ Full - Component list with pricing and warnings |
-    | **Code Drawer** | `CodeDrawer.tsx` | ✅ Full - File tree with syntax highlighting |
-    | **Wiring Drawer** | `WiringDrawer.tsx` | ✅ Full - Connection table and instructions |
-    | **Budget Drawer** | `BudgetDrawer.tsx` | ✅ Full - Cost comparison and recommendations |
-    | **Resizable Drawer** | `ResizableDrawer.tsx` | ✅ Base component for drawer resizing |
+    | **Context Drawer** | `ContextDrawer.tsx` | 🔄 Planned - Will display Context/MVP/PRD with tree navigation |
+    | **BOM Drawer** | `BOMDrawer.tsx` | 🔄 Planned - Component list with pricing and warnings |
+    | **Code Drawer** | `CodeDrawer.tsx` | 🔄 Planned - File tree with syntax highlighting |
+    | **Wiring Drawer** | `WiringDrawer.tsx` | 🔄 Planned - Connection table and instructions |
+    | **Budget Drawer** | `BudgetDrawer.tsx` | 🔄 Planned - Cost comparison and recommendations |
+    | **Resizable Drawer** | `ResizableDrawer.tsx` | 🔄 Planned - Base component for drawer resizing |
 
-    **Auto-Open Behavior:**
-    - Drawers automatically open when agents call their corresponding tools
+    **Planned Auto-Open Behavior:**
+    - Drawers will automatically open when agents call their corresponding tools
     - User can close drawers; they won't auto-reopen until chat restart
     - Event-driven via `window.dispatchEvent('open-drawer')`
 
-    ## 5. 💾 Database Integration (Amazon DynamoDB)
-    **Verified from `lib/db/` and AppSync subscriptions:**
-    - ✅ **Chat Persistence** (`lib/db/chat.ts`)
+    ## 5. 💾 Database Integration (Amazon DynamoDB - To Be Implemented)
+    **Planned from `lib/db/` and AppSync subscriptions:**
+    - 🔄 **Chat Persistence** (`lib/db/chat.ts`)
     - `createChat()`, `getMessages()`, `addMessage()`
     - `updateSession()`, `getNextSequenceNumber()`
-    - ✅ **Artifact Storage** (`lib/db/artifacts.ts`)
+    - 🔄 **Artifact Storage** (`lib/db/artifacts.ts`)
     - `createArtifact()`, `createVersion()`, `getLatestArtifact()`
     - Git-style versioning for all artifacts
-    - ✅ **Realtime Subscriptions**
-    - Messages update live via AWS AppSync with DynamoDB Streams
-    - Artifacts refresh when new versions are created
-    - ✅ **Tables Used**: `ohm-chats`, `ohm-messages`, `ohm-artifacts`, `ohm-artifact-versions`
+    - 🔄 **Realtime Subscriptions**
+    - Messages will update live via AWS AppSync with DynamoDB Streams
+    - Artifacts will refresh when new versions are created
+    - 🔄 **Tables Planned**: `ohm-chats`, `ohm-messages`, `ohm-artifacts`, `ohm-artifact-versions`
 
-    **DynamoDB Table Structure:**
+    **Planned DynamoDB Table Structure:**
     - **Primary Keys**: UUID-based with proper GSI relationships
     - **Global Secondary Indexes**: Optimized for chat_id, sequence_number, and timestamp queries
     - **IAM Policies**: Fine-grained access control for user data isolation
-    - **Realtime**: DynamoDB Streams trigger AppSync subscriptions for live updates
+    - **Realtime**: DynamoDB Streams will trigger AppSync subscriptions for live updates
 
-    ## 6. 🔔 Toast Notification System
-    **Verified from `lib/agents/toast-notifications.ts`:**
-    - ✅ **Agent Change Toasts** - "🤖 [Agent Name] is handling this"
-    - ✅ **Tool Call Toasts** - "🔧 Agent called [tool_name]"
-    - ✅ **Bedrock Throttling Toasts** - "⚠️ Bedrock throttling detected"
-    - ✅ **Retry Success Toasts** - "✅ Bedrock connection restored"
+    ## 6. 🔔 Toast Notification System (To Be Implemented)
+    **Planned from `lib/agents/toast-notifications.ts`:**
+    - 🔄 **Agent Change Toasts** - "🤖 [Agent Name] is handling this"
+    - 🔄 **Tool Call Toasts** - "🔧 Agent called [tool_name]"
+    - 🔄 **Bedrock Throttling Toasts** - "⚠️ Bedrock throttling detected"
+    - 🔄 **Retry Success Toasts** - "✅ Bedrock connection restored"
 
-    ## 7. 👤 User Context System
-    **Verified from `components/text_area/ProjectCreator.tsx` and agent config:**
-    - ✅ **User Experience Level Selection**: Beginner, Intermediate, Advanced
-    - ✅ **Project Complexity Selection**: Simple, Moderate, Complex
-    - ✅ **Dynamic System Prompt Customization** via `getContextualSystemPrompt()`
+    ## 7. 👤 User Context System (To Be Implemented)
+    **Planned from `components/text_area/ProjectCreator.tsx` and agent config:**
+    - 🔄 **User Experience Level Selection**: Beginner, Intermediate, Advanced
+    - 🔄 **Project Complexity Selection**: Simple, Moderate, Complex
+    - 🔄 **Dynamic System Prompt Customization** via `getContextualSystemPrompt()`
 
-    **How it adapts:**
+    **How it will adapt:**
     | Level | Communication Style |
     |-------|---------------------|
     | Beginner | Simple terms, explain concepts, be encouraging |
@@ -279,41 +279,41 @@
     | Moderate | 5-10 components, balanced |
     | Complex | 10+ components, production-ready |
 
-    ## 8. 🏷️ Dynamic Chat Titles
-    **Verified from `app/api/agents/title/route.ts`:**
-    - ✅ AI-generated titles (3-6 words) from first user message
-    - ✅ Background generation after chat creation
-    - ✅ Uses orchestrator agent for fast generation
+    ## 8. 🏷️ Dynamic Chat Titles (To Be Implemented)
+    **Planned from `app/api/agents/title/route.ts`:**
+    - 🔄 AI-generated titles (3-6 words) from first user message
+    - 🔄 Background generation after chat creation
+    - 🔄 Will use orchestrator agent for fast generation
 
-    ## 9. 📊 Message & Artifact Rendering
-    **Verified from `components/ai_chat/Message.jsx`:**
-    - ✅ **Markdown Rendering** with ReactMarkdown
-    - ✅ **BOM Inline Display** - BOMCard component renders when BOM tool is called
-    - ✅ **Code Block Parsing** - Syntax highlighted code blocks
-    - ✅ **Drawer Link Buttons** - "Open [X] Drawer >" buttons appear after tool calls
+    ## 9. 📊 Message & Artifact Rendering (To Be Implemented)
+    **Planned from `components/ai_chat/Message.jsx`:**
+    - 🔄 **Markdown Rendering** with ReactMarkdown
+    - 🔄 **BOM Inline Display** - BOMCard component will render when BOM tool is called
+    - 🔄 **Code Block Parsing** - Syntax highlighted code blocks
+    - 🔄 **Drawer Link Buttons** - "Open [X] Drawer >" buttons will appear after tool calls
 
-## 10. 🔄 Streaming Architecture
-**Verified from `lib/hooks/use-chat.ts` and API route:**
-- ✅ **SSE Stream Parsing** with proper event handling
-- ✅ **Event Types**: `text`, `agent_selected`, `tool_call`, `metadata`, `error`
-- ✅ **Optimistic Updates** - User messages appear immediately
-- ✅ **Real-time AI Response** - Characters stream as generated via Bedrock ConverseStream API
+## 10. 🔄 Streaming Architecture (To Be Implemented)
+**Planned from `lib/hooks/use-chat.ts` and API route:**
+- 🔄 **SSE Stream Parsing** with proper event handling
+- 🔄 **Event Types**: `text`, `agent_selected`, `tool_call`, `metadata`, `error`
+- 🔄 **Optimistic Updates** - User messages will appear immediately
+- 🔄 **Real-time AI Response** - Characters will stream as generated via Bedrock ConverseStream API
 
-## 11. 📝 Conversation Summarizer
-**Verified from `lib/agents/summarizer.ts`, `lib/agents/config.ts`, and `components/tools/ConversationSummaryDrawer.tsx`:**
-- ✅ **Incremental Summaries** – Updates the conversation summary approximately every 5 new messages instead of re-reading full history
-- ✅ **Background Processing** – Runs after messages are saved and never blocks user responses
-- ✅ **Artifact Storage** – Persists each summary as a versioned `conversation_summary` artifact in DynamoDB
-- ✅ **Project Snapshot** – Extracts components, code files, and open questions into a structured snapshot for quick reference
-- ✅ **Real-time Drawer** – `ConversationSummaryDrawer` subscribes to AppSync for artifact version changes to show live updates
-- ✅ **Context for Agents** – Agents receive conversation context via `AgentContextBuilder` to reduce token usage
+## 11. 📝 Conversation Summarizer (To Be Implemented)
+**Planned from `lib/agents/summarizer.ts`, `lib/agents/config.ts`, and `components/tools/ConversationSummaryDrawer.tsx`:**
+- 🔄 **Incremental Summaries** – Will update the conversation summary approximately every 5 new messages instead of re-reading full history
+- 🔄 **Background Processing** – Will run after messages are saved and never block user responses
+- 🔄 **Artifact Storage** – Will persist each summary as a versioned `conversation_summary` artifact in DynamoDB
+- 🔄 **Project Snapshot** – Will extract components, code files, and open questions into a structured snapshot for quick reference
+- 🔄 **Real-time Drawer** – `ConversationSummaryDrawer` will subscribe to AppSync for artifact version changes to show live updates
+- 🔄 **Context for Agents** – Agents will receive conversation context via `AgentContextBuilder` to reduce token usage
 
-## 12. 🔑 Bedrock Throttling Management System
-**Verified from `lib/agents/bedrock-client.ts`:**
-- ✅ **Exponential Backoff** - Automatic retry with increasing delays on throttling
-- ✅ **Health Tracking** - Tracks throttling events and success rates
-- ✅ **Failover Protection** - Continues operation with retry mechanisms
-- ✅ **Toast Notifications** - User feedback for throttling and recovery events
+## 12. 🔑 Bedrock Throttling Management System (To Be Implemented)
+**Planned from `lib/agents/bedrock-client.ts`:**
+- 🔄 **Exponential Backoff** - Automatic retry with increasing delays on throttling
+- 🔄 **Health Tracking** - Will track throttling events and success rates
+- 🔄 **Failover Protection** - Will continue operation with retry mechanisms
+- 🔄 **Toast Notifications** - User feedback for throttling and recovery events
 
 ---
 
@@ -323,43 +323,43 @@
 
     ---
 
-    ## 🔌 WIRING DIAGRAM VISUAL GENERATION (PARTIAL)
-    > ⚠️ **STATUS: TOOL EXISTS, VISUAL GENERATION PARTIALLY IMPLEMENTED**
+    ## 🔌 WIRING DIAGRAM VISUAL GENERATION (TO BE IMPLEMENTED)
+    > 🔄 **STATUS: TOOL TO BE CREATED, VISUAL GENERATION TO BE IMPLEMENTED**
 
-    **What EXISTS:**
-    - ✅ `update_wiring` tool defined in `tools.ts`
-    - ✅ `WiringDrawer.tsx` component with table UI
-    - ✅ Tool executor persists wiring data to DynamoDB
-    - ✅ `VisualWiringPipeline` class for SVG generation
-    - ✅ Diagram queue system for background processing
+    **What's PLANNED:**
+    - 🔄 `update_wiring` tool to be defined in `tools.ts`
+    - 🔄 `WiringDrawer.tsx` component with table UI
+    - 🔄 Tool executor will persist wiring data to DynamoDB
+    - 🔄 `VisualWiringPipeline` class for SVG generation
+    - 🔄 Diagram queue system for background processing
 
     **What's MISSING:**
-    - ❌ AI-generated breadboard images (requires BYTEZ API integration)
+    - ❌ AI-generated breadboard images (requires integration)
     - ❌ Interactive diagram component
     - ❌ Complete visual diagram display in drawer
 
     ---
 
-    ## 💰 BUDGET OPTIMIZATION (FULLY IMPLEMENTED)
-    > ✅ **STATUS: FULLY FUNCTIONAL**
+    ## 💰 BUDGET OPTIMIZATION (TO BE IMPLEMENTED)
+    > 🔄 **STATUS: TO BE FULLY IMPLEMENTED**
 
-    **What EXISTS:**
-    - ✅ `update_budget` tool defined and working
-    - ✅ `BudgetDrawer.tsx` component with full UI
-    - ✅ Budget Optimizer agent configured and tested
-    - ✅ Cost comparison and recommendation system
-    - ✅ Tradeoff analysis (LOW/MEDIUM/HIGH risk)
+    **What's PLANNED:**
+    - 🔄 `update_budget` tool to be defined and implemented
+    - 🔄 `BudgetDrawer.tsx` component with full UI
+    - 🔄 Budget Optimizer agent to be configured and tested
+    - 🔄 Cost comparison and recommendation system
+    - 🔄 Tradeoff analysis (LOW/MEDIUM/HIGH risk)
 
     ---
 
-    ## 👁️ CIRCUIT VERIFICATION (PARTIAL)
-    > ⚠️ **STATUS: AGENT EXISTS, NO UI FOR PHOTO UPLOAD**
+    ## 👁️ CIRCUIT VERIFICATION (TO BE IMPLEMENTED)
+    > 🔄 **STATUS: AGENT TO BE CREATED, NO UI FOR PHOTO UPLOAD**
 
-    **What EXISTS:**
-    - ✅ `circuitVerifier` agent configured with Gemini 2.5 Flash (vision)
-    - ✅ `runVisionAgent()` method in orchestrator
-    - ✅ System prompt for circuit analysis
-    - ✅ Amazon S3 for image uploads
+    **What's PLANNED:**
+    - 🔄 `circuitVerifier` agent to be configured with vision capabilities
+    - 🔄 `runVisionAgent()` method in orchestrator
+    - 🔄 System prompt for circuit analysis
+    - 🔄 Amazon S3 for image uploads
 
     **What's MISSING:**
     - ❌ No photo upload UI in the chat interface
@@ -369,13 +369,13 @@
 
     ---
 
-    ## 📄 DATASHEET ANALYSIS (PARTIAL)
-    > ⚠️ **STATUS: AGENT EXISTS, NO FILE UPLOAD**
+    ## 📄 DATASHEET ANALYSIS (TO BE IMPLEMENTED)
+    > 🔄 **STATUS: AGENT TO BE CREATED, NO FILE UPLOAD**
 
-    **What EXISTS:**
-    - ✅ `datasheetAnalyzer` agent configured
-    - ✅ System prompt for extraction
-    - ✅ Amazon S3 for PDF uploads
+    **What's PLANNED:**
+    - 🔄 `datasheetAnalyzer` agent to be configured
+    - 🔄 System prompt for extraction
+    - 🔄 Amazon S3 for PDF uploads
 
     **What's MISSING:**
     - ❌ No PDF/file upload UI
@@ -385,8 +385,8 @@
 
     ---
 
-    ## 🔗 RIPPLE EFFECT ENGINE (NOT IMPLEMENTED)
-    > ⚠️ **STATUS: OLD DOCUMENTATION - CONCEPT ONLY**
+    ## 🔗 RIPPLE EFFECT ENGINE (TO BE IMPLEMENTED)
+    > 🔄 **STATUS: CONCEPT TO BE DEVELOPED**
 
     **What's MISSING:**
     - ❌ No dependency monitoring between parts
@@ -395,12 +395,12 @@
 
     ---
 
-    ## 🔒 LOCKED PROJECT BLUEPRINT (PARTIAL)
-    > ⚠️ **STATUS: CONCEPT EXISTS, NOT ENFORCED**
+    ## 🔒 LOCKED PROJECT BLUEPRINT (TO BE IMPLEMENTED)
+    > 🔄 **STATUS: CONCEPT TO BE IMPLEMENTED, NOT ENFORCED**
 
-    **What EXISTS:**
-    - ✅ Agents mention "Lock" in responses
-    - ✅ `isReadyToLock` flag returned from orchestrator
+    **What's PLANNED:**
+    - 🔄 Agents will mention "Lock" in responses
+    - 🔄 `isReadyToLock` flag to be returned from orchestrator
 
     **What's MISSING:**
     - ❌ No actual "lock" action that freezes project state
@@ -990,7 +990,7 @@
 
     # ✅ Summary
 
-    **What's Fully Working:**
+    **What's Planned to be Built:**
     - Multi-agent AI system with 10 specialized agents via Amazon Bedrock
     - Streaming chat with real-time responses via Bedrock ConverseStream API
     - Tool calling with auto-opening drawers
@@ -1009,7 +1009,7 @@
     - Universal file I/O tools (read_file, write_file)
     - AWS Amplify hosting with optimized deployment
 
-    **What Needs Work:**
+    **What Still Needs Development:**
     - Complete visual wiring diagram generation (AI breadboard images)
     - Photo upload UI for circuit verification (S3 ready)
     - PDF upload for datasheet analysis (S3 ready)
@@ -1019,8 +1019,8 @@
     - Enhanced mobile responsiveness
     - Performance optimization for large conversations
 
-    **AWS-Native Architecture:**
-    - Built from the ground up using AWS services
+    **AWS-Native Architecture Plan:**
+    - Will be built from the ground up using AWS services
     - Modular agent system leveraging Amazon Bedrock
     - DynamoDB for scalable NoSQL data storage
     - AppSync for real-time GraphQL subscriptions
