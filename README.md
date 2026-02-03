@@ -180,30 +180,40 @@ User Query
 
 ---
 
-#  PLANNED FEATURES
+#  PLANNED FEATURES (NOT YET IMPLEMENTED)
+
+> **📝 NOTE:** All file paths mentioned below (e.g., `lib/agents/tool-executor.ts`, `components/BOMDrawer.tsx`) are **proposed locations** for when the code is actually implemented. **No code files exist yet** - this is a documentation-only repository describing the planned architecture.
+
+---
 
 ## 1.  UI & Design System
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
 **Planned Components:**
-- **Landing Page** (`components/LandingPage.tsx`)
-- **Project Creator** (`components/text_area/ProjectCreator.tsx`) - with user level/complexity selection
-- **AI Chat Interface** (`components/ai_chat/AIAssistantUI.jsx`) - full chat UI
+- **Landing Page** (proposed: `components/LandingPage.tsx`)
+- **Project Creator** (proposed: `components/text_area/ProjectCreator.tsx`) - with user level/complexity selection
+- **AI Chat Interface** (proposed: `components/ai_chat/AIAssistantUI.jsx`) - full chat UI
 - **Sidebar** with conversation history, folders, templates
 - **Header** with agent dropdown selector
 - **Theme Toggle** (dark/light mode with localStorage persistence)
 - **Mesh Gradient** background effects
 - **Faulty Terminal** animation component
 
-## 2.  Real AI Integration (To Be Implemented)
-**Planned from `lib/agents/orchestrator.ts` and API routes:**
+## 2.  Real AI Integration
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/agents/orchestrator.ts` and API routes:**
 -  **Amazon Bedrock Integration** via AWS SDK with Claude 3.5 Sonnet and Claude 3 Opus models
 -  **Multi-Agent Orchestration** - automatic routing based on intent
 -  **Streaming Responses** - real-time token-by-token updates via Bedrock ConverseStream API
--  **Model Failover** - automatic retry with exponential backoff on throttling errors (`lib/agents/bedrock-client.ts`)
+-  **Model Failover** - automatic retry with exponential backoff on throttling errors (proposed: `lib/agents/bedrock-client.ts`)
 -  **Tool Calling** - agents can call structured tools via Bedrock function calling
--  **SSE (Server-Sent Events)** for streaming (`app/api/agents/chat/route.ts`)
+-  **SSE (Server-Sent Events)** for streaming (proposed: `app/api/agents/chat/route.ts`)
 
-## 3.  Tool System (To Be Implemented)
-**Planned from `lib/agents/tools.ts` and `lib/agents/tool-executor.ts`:**
+## 3.  Tool System
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/agents/tools.ts` and `lib/agents/tool-executor.ts`:**
 
 | Tool | Description | Used By |
 |------|-------------|---------|
@@ -215,10 +225,12 @@ User Query
 - **More Flexible**: Agents can read/write any artifact type
 - **Less Maintenance**: No need to update tool schemas for new artifact types
 
-## 4.  Drawer System (To Be Implemented)
-**Planned from `components/tools/` directory:**
+## 4.  Drawer System
+**Status:** 🔄 **TO BE IMPLEMENTED**
 
-| Drawer | File | Status |
+**Planned from proposed `components/tools/` directory:**
+
+| Drawer | Proposed File | Status |
 |--------|------|--------|
 | **Context Drawer** | `ContextDrawer.tsx` |  Planned - Will display Context/MVP/PRD with tree navigation |
 | **BOM Drawer** | `BOMDrawer.tsx` |  Planned - Component list with pricing and warnings |
@@ -228,16 +240,18 @@ User Query
 | **Resizable Drawer** | `ResizableDrawer.tsx` |  Planned - Base component for drawer resizing |
 
 **Planned Auto-Open Behavior:**
-- Drawers will automatically open when agents call their corresponding tools
+- Drawers will automatically open when agents write artifacts
 - User can close drawers; they won't auto-reopen until chat restart
 - Event-driven via `window.dispatchEvent('open-drawer')`
 
-## 5.  Database Integration (Amazon DynamoDB - To Be Implemented)
-**Planned from `lib/db/` and AppSync subscriptions:**
--  **Chat Persistence** (`lib/db/chat.ts`)
+## 5.  Database Integration (Amazon DynamoDB)
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/db/` and AppSync subscriptions:**
+-  **Chat Persistence** (proposed: `lib/db/chat.ts`)
 - `createChat()`, `getMessages()`, `addMessage()`
 - `updateSession()`, `getNextSequenceNumber()`
--  **Artifact Storage** (`lib/db/artifacts.ts`)
+-  **Artifact Storage** (proposed: `lib/db/artifacts.ts`)
 - `createArtifact()`, `createVersion()`, `getLatestArtifact()`
 - Git-style versioning for all artifacts
 -  **Realtime Subscriptions**
@@ -251,15 +265,19 @@ User Query
 - **IAM Policies**: Fine-grained access control for user data isolation
 - **Realtime**: DynamoDB Streams will trigger AppSync subscriptions for live updates
 
-## 6.  Toast Notification System (To Be Implemented)
-**Planned from `lib/agents/toast-notifications.ts`:**
+## 6.  Toast Notification System
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/agents/toast-notifications.ts`:**
 -  **Agent Change Toasts** - " [Agent Name] is handling this"
 -  **Tool Call Toasts** - " Agent called [tool_name]"
 -  **Bedrock Throttling Toasts** - " Bedrock throttling detected"
 -  **Retry Success Toasts** - " Bedrock connection restored"
 
-## 7.  User Context System (To Be Implemented)
-**Planned from `components/text_area/ProjectCreator.tsx` and agent config:**
+## 7.  User Context System
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `components/text_area/ProjectCreator.tsx` and agent config:**
 -  **User Experience Level Selection**: Beginner, Intermediate, Advanced
 -  **Project Complexity Selection**: Simple, Moderate, Complex
 -  **Dynamic System Prompt Customization** via `getContextualSystemPrompt()`
@@ -277,28 +295,36 @@ User Query
 | Moderate | 5-10 components, balanced |
 | Complex | 10+ components, production-ready |
 
-## 8.  Dynamic Chat Titles (To Be Implemented)
-**Planned from `app/api/agents/title/route.ts`:**
+## 8.  Dynamic Chat Titles
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `app/api/agents/title/route.ts`:**
 -  AI-generated titles (3-6 words) from first user message
 -  Background generation after chat creation
 -  Will use orchestrator agent for fast generation
 
-## 9.  Message & Artifact Rendering (To Be Implemented)
-**Planned from `components/ai_chat/Message.jsx`:**
+## 9.  Message & Artifact Rendering
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `components/ai_chat/Message.jsx`:**
 -  **Markdown Rendering** with ReactMarkdown
 -  **BOM Inline Display** - BOMCard component will render when BOM tool is called
 -  **Code Block Parsing** - Syntax highlighted code blocks
 -  **Drawer Link Buttons** - "Open [X] Drawer >" buttons will appear after tool calls
 
-## 10.  Streaming Architecture (To Be Implemented)
-**Planned from `lib/hooks/use-chat.ts` and API route:**
+## 10.  Streaming Architecture
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/hooks/use-chat.ts` and API route:**
 -  **SSE Stream Parsing** with proper event handling
 -  **Event Types**: `text`, `agent_selected`, `tool_call`, `metadata`, `error`
 -  **Optimistic Updates** - User messages will appear immediately
 -  **Real-time AI Response** - Characters will stream as generated via Bedrock ConverseStream API
 
-## 11.  Conversation Summarizer (To Be Implemented)
-**Planned from `lib/agents/summarizer.ts`, `lib/agents/config.ts`, and `components/tools/ConversationSummaryDrawer.tsx`:**
+## 11.  Conversation Summarizer
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/agents/summarizer.ts`, `lib/agents/config.ts`, and `components/tools/ConversationSummaryDrawer.tsx`:**
 -  **Incremental Summaries** – Will update the conversation summary approximately every 5 new messages instead of re-reading full history
 -  **Background Processing** – Will run after messages are saved and never block user responses
 -  **Artifact Storage** – Will persist each summary as a versioned `conversation_summary` artifact in DynamoDB
@@ -306,26 +332,20 @@ User Query
 -  **Real-time Drawer** – `ConversationSummaryDrawer` will subscribe to AppSync for artifact version changes to show live updates
 -  **Context for Agents** – Agents will receive conversation context via `AgentContextBuilder` to reduce token usage
 
-## 12.  Bedrock Throttling Management System (To Be Implemented)
-**Planned from `lib/agents/bedrock-client.ts`:**
+## 12.  Bedrock Throttling Management System
+**Status:** 🔄 **TO BE IMPLEMENTED**
+
+**Planned from proposed `lib/agents/bedrock-client.ts`:**
 -  **Exponential Backoff** - Automatic retry with increasing delays on throttling
 -  **Health Tracking** - Will track throttling events and success rates
 -  **Failover Protection** - Will continue operation with retry mechanisms
 -  **Toast Notifications** - User feedback for throttling and recovery events
 
----
-
-# ⚠️ PLANNED FEATURES (NOT YET IMPLEMENTED)
-
-> **🚨 WARNING: The features listed below are from OLD documentation and have NOT been fully wired up or tested. The infrastructure exists but end-to-end functionality is incomplete.**
-
----
-
-## 🔌 WIRING DIAGRAM VISUAL GENERATION (TO BE IMPLEMENTED)
-> 🔄 **STATUS: TOOL TO BE CREATED, VISUAL GENERATION TO BE IMPLEMENTED**
+## 13. 🔌 WIRING DIAGRAM VISUAL GENERATION
+**Status:** 🔄 **TO BE IMPLEMENTED**
 
 **What's PLANNED:**
-- 🔄 `update_wiring` tool defined in `tools.ts`
+- 🔄 Wiring data persistence via `write_file` tool
 - 🔄 `WiringDrawer.tsx` component with table UI
 - 🔄 Tool executor will persist wiring data to DynamoDB
 -  `VisualWiringPipeline` class for SVG generation
@@ -336,22 +356,18 @@ User Query
 -  Interactive diagram component
 -  Complete visual diagram display in drawer
 
----
-
-##  BUDGET OPTIMIZATION (TO BE IMPLEMENTED)
-> 🔄 **STATUS: TO BE FULLY IMPLEMENTED**
+## 14.  BUDGET OPTIMIZATION
+**Status:** 🔄 **TO BE IMPLEMENTED**
 
 **What's PLANNED:**
-- 🔄 `update_budget` tool to be defined and implemented
+- 🔄 Budget data persistence via `write_file` tool
 - 🔄 `BudgetDrawer.tsx` component with full UI
 - 🔄 Budget Optimizer agent to be configured and tested
 - 🔄 Cost comparison and recommendation system
 - 🔄 Tradeoff analysis (LOW/MEDIUM/HIGH risk)
 
----
-
-##  CIRCUIT VERIFICATION (TO BE IMPLEMENTED)
->  🔄 **STATUS: AGENT TO BE CREATED, NO UI FOR PHOTO UPLOAD**
+## 15.  CIRCUIT VERIFICATION
+**Status:** 🔄 **TO BE IMPLEMENTED**
 
 **What's PLANNED:**
 - 🔄 `circuitVerifier` agent to be configured with vision capabilities
@@ -365,10 +381,8 @@ User Query
 -  Cannot trigger vision verification from user action
 -  No presigned URL generation for secure uploads
 
----
-
-##  DATASHEET ANALYSIS (TO BE IMPLEMENTED)
->  🔄 **STATUS: AGENT TO BE CREATED, NO FILE UPLOAD**
+## 16.  DATASHEET ANALYSIS
+**Status:** 🔄 **TO BE IMPLEMENTED**
 
 **What's PLANNED:**
 - 🔄 `datasheetAnalyzer` agent to be configured
@@ -381,20 +395,16 @@ User Query
 -  Not triggerable from user action
 -  No presigned URL generation for secure uploads
 
----
-
-##  RIPPLE EFFECT ENGINE (NOT IMPLEMENTED)
->  **STATUS: OLD DOCUMENTATION - CONCEPT ONLY**
+## 17.  RIPPLE EFFECT ENGINE
+**Status:** ❌ **CONCEPT ONLY - NOT PLANNED FOR INITIAL IMPLEMENTATION**
 
 **What's MISSING:**
 -  No dependency monitoring between parts
 -  No automatic conflict detection when parts change
 -  No cascading update system
 
----
-
-##  LOCKED PROJECT BLUEPRINT (TO BE IMPLEMENTED)
->  🔄 **STATUS: CONCEPT TO BE IMPLEMENTED, NOT ENFORCED**
+## 18.  LOCKED PROJECT BLUEPRINT
+**Status:** 🔄 **CONCEPT TO BE IMPLEMENTED**
 
 **What's PLANNED:**
 - 🔄 Agents will mention "Lock" in responses
